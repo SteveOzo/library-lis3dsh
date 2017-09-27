@@ -15,13 +15,15 @@ class lis3dsh:
 
     ACCEL_SCALE_MODIFIER_2G = 16384.0
     ACCEL_SCALE_MODIFIER_4G = 8192.0
+    ACCEL_SCALE_MODIFIER_6G = 5461.33333
     ACCEL_SCALE_MODIFIER_8G = 4096.0
     ACCEL_SCALE_MODIFIER_16G = 2048.0
 
     ACCEL_RANGE_2G = 0x00
     ACCEL_RANGE_4G = 0x08
-    ACCEL_RANGE_8G = 0x10
-    ACCEL_RANGE_16G = 0x18
+    ACCEL_RANGE_6G = 0x10
+    ACCEL_RANGE_8G = 0x18
+    ACCEL_RANGE_16G = 0x20
 
     #Registers
 
@@ -35,7 +37,7 @@ class lis3dsh:
     def __init__(self, address):
         self.address = address
         # Wake up the lis3dsh and configure for sampling at 3.125 Hz
-        self.bus.write_byte_data(self.address, self.CTRL_REG4, 0x17)
+        self.bus.write_byte_data(self.address, self.CTRL_REG4, 0x1F)
 
     def read_i2c_word(self, register):
         """Read two i2c registers and combine them.
@@ -67,7 +69,7 @@ class lis3dsh:
         If raw is False, it will return an integer: -1, 2, 4, 8 or 16. When it
         returns -1 something went wrong.
         """
-        raw_data = self.bus.read_byte_data(self.address, self.ACCEL_CONFIG)
+        raw_data = self.bus.read_byte_data(self.address, self.CTRL_REG5)
 
         if raw is True:
             return raw_data
@@ -76,6 +78,8 @@ class lis3dsh:
                 return 2
             elif raw_data == self.ACCEL_RANGE_4G:
                 return 4
+            elif raw_data == self.ACCEL_RANGE_6G:
+                return 6
             elif raw_data == self.ACCEL_RANGE_8G:
                 return 8
             elif raw_data == self.ACCEL_RANGE_16G:
@@ -83,7 +87,7 @@ class lis3dsh:
             else:
                 return -1
 
-    def get_accel_data(self, g = True):
+    def get_accel_data(self, g = False):
         """Gets and returns the X, Y and Z values from the accelerometer.
 
         If g is True, it will return the data in g
@@ -94,10 +98,15 @@ class lis3dsh:
         y = self.read_i2c_word(self.ACCEL_YOUT0)
         z = self.read_i2c_word(self.ACCEL_ZOUT0)
 
+        accel_scale_modifier = None
+        accel_range = self.read_accel_range(True)
+
         if accel_range == self.ACCEL_RANGE_2G:
             accel_scale_modifier = self.ACCEL_SCALE_MODIFIER_2G
         elif accel_range == self.ACCEL_RANGE_4G:
             accel_scale_modifier = self.ACCEL_SCALE_MODIFIER_4G
+        elif accel_range == self.ACCEL_RANGE_6G:
+            accel_scale_modifier = self.ACCEL_SCALE_MODIFIER_6G
         elif accel_range == self.ACCEL_RANGE_8G:
             accel_scale_modifier = self.ACCEL_SCALE_MODIFIER_8G
         elif accel_range == self.ACCEL_RANGE_16G:
@@ -105,6 +114,8 @@ class lis3dsh:
         else:
             print("Unkown range - accel_scale_modifier set to self.ACCEL_SCALE_MODIFIER_2G")
             accel_scale_modifier = self.ACCEL_SCALE_MODIFIER_2G
+
+        print accel_scale_modifier
 
         x = x / accel_scale_modifier
         y = y / accel_scale_modifier
@@ -125,6 +136,6 @@ if __name__ == "__main__":
     while True:
         accel_data = lis.get_accel_data()
         print ("Valores")
-        print("X"+accel_data['x'])
-        print("Y"+accel_data['y'])
-        print("Z"+accel_data['z'])
+        print("X"+str(accel_data['x']))
+        print("Y"+str(accel_data['y']))
+        print("Z"+str(accel_data['z']))
