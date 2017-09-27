@@ -46,8 +46,8 @@ class lis3dsh:
         Returns the combined read results.
         """
         # Read the data from the registers
-        high = self.bus.read_byte_data(self.address, register)
-        low = self.bus.read_byte_data(self.address, register + 1)
+        low = self.bus.read_byte_data(self.address, register)
+        high = self.bus.read_byte_data(self.address, register + 1)
 
         value = (high << 8) + low
 
@@ -136,6 +136,6 @@ if __name__ == "__main__":
     while True:
         accel_data = lis.get_accel_data()
         print ("Valores")
-        print("X"+str(accel_data['x']))
-        print("Y"+str(accel_data['y']))
-        print("Z"+str(accel_data['z']))
+        print("X: "+str(accel_data['x']))
+        print("Y: "+str(accel_data['y']))
+        print("Z: "+str(accel_data['z']))
